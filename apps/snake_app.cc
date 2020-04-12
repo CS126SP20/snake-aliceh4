@@ -74,14 +74,19 @@ void SnakeApp::setup() {
 void SnakeApp::update() {
   if (state_ == GameState::kGameOver) {
     if (top_players_.empty()) {
-      leaderboard_.AddScoreToLeaderBoard({player_name_, engine_.GetScore()});
+      leaderboard_.AddScoreToLeaderBoard({player_name_,
+                                          engine_.GetScore()});
       top_players_ = leaderboard_.RetrieveHighScores(kLimit);
+      your_top_scores_ = leaderboard_.RetrieveHighScores
+          (snake::Player(player_name_, engine_.GetScore()), kLimit);
 
       // It is crucial the this vector be populated, given that `kLimit` > 0.
       assert(!top_players_.empty());
+      assert(!your_top_scores_.empty());
     }
     return;
   }
+  snake_size_ = engine_.GetSnake().Size();
 
   if (paused_) return;
   const auto time = system_clock::now();
@@ -180,8 +185,18 @@ void SnakeApp::DrawGameOver() {
   for (const snake::Player& player : top_players_) {
     std::stringstream ss;
     ss << player.name << " - " << player.score;
-    PrintText(ss.str(), color, size, {center.x, center.y + (++row) * 50});
+    PrintText(ss.str(), color, size,
+        {center.x, center.y + (++row) * 50});
   }
+  PrintText("Your high scores:", color, size,
+      {center.x, center.y + (++row) * 50});
+  for (const snake::Player& player : your_top_scores_) {
+    std::stringstream ss;
+    ss << player.name << " - " << player.score;
+    PrintText(ss.str(), color, size,
+        {center.x, center.y + (++row) * 50});
+  }
+
 
   printed_game_over_ = true;
 }
@@ -208,6 +223,15 @@ void SnakeApp::DrawSnake() const {
 
 void SnakeApp::DrawFood() const {
   cinder::gl::color(0, 1, 0);
+  size_t snake_size = engine_.GetSnake().Size(); // Get the snake size
+  // Get elapsed time?
+  using std::chrono::milliseconds;
+  const double elapsed_time =
+      duration_cast<milliseconds>(system_clock::now() - last_intact_time_)
+          .count();
+
+
+
   const Location loc = engine_.GetFood().GetLocation();
   cinder::gl::drawSolidRect(Rectf(tile_size_ * loc.Row(),
                                   tile_size_ * loc.Col(),

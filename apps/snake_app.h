@@ -53,6 +53,12 @@ class SnakeApp : public cinder::app::App {
   const size_t tile_size_;
   size_t time_left_;
   std::vector<snake::Player> top_players_;
+
+  // Get the your top scores...
+  std::vector<snake::Player> your_top_scores_;
+  bool should_change_color_;
+  cinder::Timer timer_;
+  size_t snake_size_;
 };
 
 }  // namespace snakeapp

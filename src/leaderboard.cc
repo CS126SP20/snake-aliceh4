@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+
 namespace snake {
 
 using std::string;
@@ -50,9 +51,9 @@ vector<Player> GetPlayers(sqlite::database_binder* rows) {
 
 vector<Player> LeaderBoard::RetrieveHighScores(const size_t limit) {
   try {
-
-    auto rows = db_ << "";
-    // TODO: How to find the top players; order by descending
+    auto rows = db_ << "SELECT name, score FROM leaderboard "
+                       "ORDER BY score DESC LIMIT ? "
+                    << limit;
     return GetPlayers(&rows);
   } catch (const std::exception& e) {
     std::cout << e.what() << std::endl;
@@ -61,9 +62,15 @@ vector<Player> LeaderBoard::RetrieveHighScores(const size_t limit) {
 
 vector<Player> LeaderBoard::RetrieveHighScores(const Player& player,
                                                const size_t limit) {
-  // TODO(you): Add your query here.
-  auto rows = db_ << "";
-  return GetPlayers(&rows);
+  try {
+    auto rows = db_ << "SELECT name, score FROM leaderboard WHERE name = ? "
+                       "ORDER BY score DESC LIMIT ? ;"
+                    << player.name
+                    << limit;
+    return GetPlayers(&rows);
+  } catch (const std::exception& e) {
+    std::cout << e.what() << std::endl;
+  }
 }
 
 }  // namespace snake
