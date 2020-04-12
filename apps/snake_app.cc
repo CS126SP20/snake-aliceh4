@@ -28,6 +28,7 @@ using snake::Location;
 using snake::Segment;
 using std::chrono::duration_cast;
 using std::chrono::seconds;
+using std::chrono::milliseconds;
 using std::chrono::system_clock;
 using std::string;
 
@@ -35,6 +36,9 @@ const double kRate = 25;
 const size_t kLimit = 3;
 const char kDbPath[] = "snake.db";
 const seconds kCountdownTime = seconds(10);
+const size_t kToMilliseconds = 1000;
+const size_t kResetColorTime = -100;
+
 #if defined(CINDER_COCOA_TOUCH)
 const char kNormalFont[] = "Arial";
 const char kBoldFont[] = "Arial-BoldMT";
@@ -64,7 +68,12 @@ SnakeApp::SnakeApp()
       speed_{FLAGS_speed},
       state_{GameState::kPlaying},
       tile_size_{FLAGS_tilesize},
-      time_left_{0} {}
+      time_left_{0},
+      color_change_time_{-100},
+      color_index_one_{0},
+      color_index_two_{1},
+      color_index_three_{0},
+      should_change_color_{false} {}
 
 void SnakeApp::setup() {
   cinder::gl::enableDepthWrite();
@@ -86,10 +95,32 @@ void SnakeApp::update() {
     }
     return;
   }
-  snake_size_ = engine_.GetSnake().Size();
 
   if (paused_) return;
+
   const auto time = system_clock::now();
+
+  using std::chrono::seconds;
+
+  // Handle color changing
+  double snake_size_ = engine_.GetSnake().Size(); // Get snake size
+  double color_duration = 1 / snake_size_;
+  if (color_change_time_ == kResetColorTime) {
+    color_change_time_ = color_duration; // set the color changing time
+    last_color_time_ = time; // Initialize the "start time"
+  }
+  // Convert to milliseconds and then int
+  int color_duration_int = (int) color_change_time_ * kToMilliseconds;
+  auto color_duration_ms = milliseconds(color_duration_int);
+  // Find the amt of time spend so far
+  const auto time_in_color = time - last_color_time_;
+  if (time_in_color >= color_duration_ms) {
+    // Reset color_change_time_ and generate random numbers for color
+    color_change_time_ = kResetColorTime;
+    color_index_one_ = ((double) rand() / (RAND_MAX));
+    color_index_two_ = ((double) rand() / (RAND_MAX));
+    color_index_three_ = ((double) rand() / (RAND_MAX));
+  }
 
   if (engine_.GetSnake().IsChopped()) {
     if (state_ != GameState::kCountDown) {
@@ -103,7 +134,7 @@ void SnakeApp::update() {
       state_ = GameState::kGameOver;
     }
 
-    using std::chrono::seconds;
+
     const auto time_left_s =
         duration_cast<seconds>(kCountdownTime - time_in_countdown);
     time_left_ = static_cast<size_t>(
@@ -222,15 +253,8 @@ void SnakeApp::DrawSnake() const {
 }
 
 void SnakeApp::DrawFood() const {
-  cinder::gl::color(0, 1, 0);
-  size_t snake_size = engine_.GetSnake().Size(); // Get the snake size
-  // Get elapsed time?
-  using std::chrono::milliseconds;
-  const double elapsed_time =
-      duration_cast<milliseconds>(system_clock::now() - last_intact_time_)
-          .count();
-
-
+  // Use color indeces
+  cinder::gl::color(color_index_one_, color_index_two_, color_index_three_);
 
   const Location loc = engine_.GetFood().GetLocation();
   cinder::gl::drawSolidRect(Rectf(tile_size_ * loc.Row(),

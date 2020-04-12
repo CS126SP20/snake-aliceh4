@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+using std::chrono::seconds;
+
 namespace snakeapp {
 
 enum class GameState {
@@ -54,11 +56,16 @@ class SnakeApp : public cinder::app::App {
   size_t time_left_;
   std::vector<snake::Player> top_players_;
 
-  // Get the your top scores...
-  std::vector<snake::Player> your_top_scores_;
-  bool should_change_color_;
-  cinder::Timer timer_;
-  size_t snake_size_;
+  // Vector for the top scores of the user
+  std::vector<snake::Player> your_top_scores_
+  // Amount of time before the color of the food should be changed
+  double color_change_time_;
+  // Following are the three indexes for color
+  double color_index_one_;
+  double color_index_two_;
+  double color_index_three_;
+  // Keeps track of when the color_change_time_ has started
+  std::chrono::time_point<std::chrono::system_clock> last_color_time_;
 };
 
 }  // namespace snakeapp
