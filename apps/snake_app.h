@@ -57,7 +57,7 @@ class SnakeApp : public cinder::app::App {
   std::vector<snake::Player> top_players_;
 
   // Vector for the top scores of the user
-  std::vector<snake::Player> your_top_scores_
+  std::vector<snake::Player> your_top_scores_;
   // Amount of time before the color of the food should be changed
   double color_change_time_;
   // Following are the three indexes for color

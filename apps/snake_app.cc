@@ -10,6 +10,8 @@
 #include <gflags/gflags.h>
 #include <snake/player.h>
 #include <snake/segment.h>
+#include <cinder/audio/audio.h>
+
 
 #include <algorithm>
 #include <chrono>
@@ -17,6 +19,7 @@
 #include <string>
 
 namespace snakeapp {
+
 
 using cinder::Color;
 using cinder::ColorA;
@@ -31,6 +34,9 @@ using std::chrono::seconds;
 using std::chrono::milliseconds;
 using std::chrono::system_clock;
 using std::string;
+
+// Global variable
+cinder::audio::VoiceRef mVoice;
 
 const double kRate = 25;
 const size_t kLimit = 3;
@@ -72,12 +78,16 @@ SnakeApp::SnakeApp()
       color_change_time_{-100},
       color_index_one_{0},
       color_index_two_{1},
-      color_index_three_{0},
-      should_change_color_{false} {}
+      color_index_three_{0} {}
 
 void SnakeApp::setup() {
   cinder::gl::enableDepthWrite();
   cinder::gl::enableDepthRead();
+  // Get audio to play
+  cinder::audio::SourceFileRef sourceFile = cinder::audio::load
+      (cinder::app::loadAsset("Tetris.mp3"));
+  mVoice = cinder::audio::Voice::create(sourceFile);
+  mVoice->start();
 }
 
 void SnakeApp::update() {
@@ -110,7 +120,8 @@ void SnakeApp::update() {
     last_color_time_ = time; // Initialize the "start time"
   }
   // Convert to milliseconds and then int
-  int color_duration_int = (int) color_change_time_ * kToMilliseconds;
+  double color_duration_double = color_change_time_ * kToMilliseconds;
+  int color_duration_int = (int) color_duration_double;
   auto color_duration_ms = milliseconds(color_duration_int);
   // Find the amt of time spend so far
   const auto time_in_color = time - last_color_time_;
