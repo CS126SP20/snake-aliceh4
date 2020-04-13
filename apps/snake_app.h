@@ -30,6 +30,8 @@ class SnakeApp : public cinder::app::App {
   void update() override;
   void draw() override;
   void keyDown(cinder::app::KeyEvent) override;
+  // Change the snake's color whenever left mouse is clicked
+  void mouseDown(cinder::app::MouseEvent) override;
 
  private:
   void DrawBackground() const;
@@ -66,6 +68,13 @@ class SnakeApp : public cinder::app::App {
   double color_index_three_;
   // Keeps track of when the color_change_time_ has started
   std::chrono::time_point<std::chrono::system_clock> last_color_time_;
+  // Track off snake size
+  size_t snake_size_;
+  seconds time_played_;
+  // Snake colors
+  double snake_index_one_;
+  double snake_index_two_;
+  double snake_index_three_;
 };
 
 }  // namespace snakeapp

@@ -36,7 +36,8 @@ using std::chrono::system_clock;
 using std::string;
 
 // Global variable
-cinder::audio::VoiceRef mVoice;
+cinder::audio::VoiceRef background_music;
+cinder::audio::VoiceRef eating_sound;
 
 const double kRate = 25;
 const size_t kLimit = 3;
@@ -78,7 +79,11 @@ SnakeApp::SnakeApp()
       color_change_time_{-100},
       color_index_one_{0},
       color_index_two_{1},
-      color_index_three_{0} {}
+      color_index_three_{0},
+      snake_size_{1},
+      snake_index_one_{0},
+      snake_index_two_{0},
+      snake_index_three_{1} {}
 
 void SnakeApp::setup() {
   cinder::gl::enableDepthWrite();
@@ -86,8 +91,8 @@ void SnakeApp::setup() {
   // Get audio to play
   cinder::audio::SourceFileRef sourceFile = cinder::audio::load
       (cinder::app::loadAsset("Tetris.mp3"));
-  mVoice = cinder::audio::Voice::create(sourceFile);
-  mVoice->start();
+  background_music = cinder::audio::Voice::create(sourceFile);
+  background_music->start();
 }
 
 void SnakeApp::update() {
@@ -113,8 +118,8 @@ void SnakeApp::update() {
   using std::chrono::seconds;
 
   // Handle color changing
-  double snake_size_ = engine_.GetSnake().Size(); // Get snake size
-  double color_duration = 1 / snake_size_;
+  double snake_size_now = engine_.GetSnake().Size(); // Get snake size
+  double color_duration = 1 / snake_size_now;
   if (color_change_time_ == kResetColorTime) {
     color_change_time_ = color_duration; // set the color changing time
     last_color_time_ = time; // Initialize the "start time"
@@ -131,6 +136,15 @@ void SnakeApp::update() {
     color_index_one_ = ((double) rand() / (RAND_MAX));
     color_index_two_ = ((double) rand() / (RAND_MAX));
     color_index_three_ = ((double) rand() / (RAND_MAX));
+  }
+
+  // Handle eating sound --> play noise when the snake size has increased
+  if (snake_size_now > snake_size_) {
+    cinder::audio::SourceFileRef sourceFile = cinder::audio::load
+        (cinder::app::loadAsset("apple_bite.mp3"));
+    eating_sound = cinder::audio::Voice::create(sourceFile);
+    eating_sound->start();
+    snake_size_ = snake_size_now;
   }
 
   if (engine_.GetSnake().IsChopped()) {
@@ -249,7 +263,8 @@ void SnakeApp::DrawSnake() const {
     const Location loc = part.GetLocation();
     if (part.IsVisibile()) {
       const double opacity = std::exp(-(num_visible++) / kRate);
-      cinder::gl::color(ColorA(0, 0, 1, static_cast<float>(opacity)));
+      cinder::gl::color(ColorA(snake_index_one_, snake_index_two_,
+          snake_index_three_, static_cast<float>(opacity)));
     } else {
       const float percentage = PercentageOver();
       cinder::gl::color(Color(percentage, 0, 0));
@@ -325,6 +340,17 @@ void SnakeApp::keyDown(KeyEvent event) {
       break;
     }
   }
+}
+
+void SnakeApp::mouseDown(cinder::app::MouseEvent event) {
+  // Change the color of the snake when the left mouse button is clicked
+  if (event.isLeft()) {
+    snake_index_one_   = ((double) rand() / (RAND_MAX));
+    snake_index_two_   = ((double) rand() / (RAND_MAX));
+    snake_index_three_ = ((double) rand() / (RAND_MAX));
+  }
+  engine_.GetSnake().Head().GetLocation();
+
 }
 
 void SnakeApp::ResetGame() {
