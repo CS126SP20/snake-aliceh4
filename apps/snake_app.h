@@ -30,8 +30,9 @@ class SnakeApp : public cinder::app::App {
   void update() override;
   void draw() override;
   void keyDown(cinder::app::KeyEvent) override;
-  // Change the snake's color whenever left mouse is clicked
+  // Allow the user to move the snake with the mouse instead
   void mouseDown(cinder::app::MouseEvent) override;
+  void mouseWheel(cinder::app::MouseEvent) override;
 
  private:
   void DrawBackground() const;

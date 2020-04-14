@@ -101,6 +101,7 @@ void SnakeApp::update() {
       leaderboard_.AddScoreToLeaderBoard({player_name_,
                                           engine_.GetScore()});
       top_players_ = leaderboard_.RetrieveHighScores(kLimit);
+      // Add your_top_scores_
       your_top_scores_ = leaderboard_.RetrieveHighScores
           (snake::Player(player_name_, engine_.GetScore()), kLimit);
 
@@ -252,8 +253,6 @@ void SnakeApp::DrawGameOver() {
     PrintText(ss.str(), color, size,
         {center.x, center.y + (++row) * 50});
   }
-
-
   printed_game_over_ = true;
 }
 
@@ -284,7 +283,7 @@ void SnakeApp::DrawFood() const {
 
   const Location loc = engine_.GetFood().GetLocation();
   cinder::gl::drawSolidRect(Rectf(tile_size_ * loc.Row(),
-                                  tile_size_ * loc.Col(),
+                                   tile_size_ * loc.Col(),
                                   tile_size_ * loc.Row() + tile_size_,
                                   tile_size_ * loc.Col() + tile_size_));
 }
@@ -343,14 +342,22 @@ void SnakeApp::keyDown(KeyEvent event) {
 }
 
 void SnakeApp::mouseDown(cinder::app::MouseEvent event) {
-  // Change the color of the snake when the left mouse button is clicked
-  if (event.isLeft()) {
-    snake_index_one_   = ((double) rand() / (RAND_MAX));
-    snake_index_two_   = ((double) rand() / (RAND_MAX));
-    snake_index_three_ = ((double) rand() / (RAND_MAX));
+  // Allow user to control game using mouse instead
+  if (event.isLeftDown()) {
+    engine_.SetDirection(Direction::kUp);
+  } else if (event.isRightDown()) {
+    engine_.SetDirection(Direction::kDown);
   }
-  engine_.GetSnake().Head().GetLocation();
 
+}
+
+void SnakeApp::mouseWheel(cinder::app::MouseEvent event) {
+  // Wheel to check to move the snake up or down
+  if (event.getWheelIncrement() > 0) {
+    engine_.SetDirection(Direction::kRight);
+  } else if (event.getWheelIncrement() < 0) {
+    engine_.SetDirection(Direction::kLeft);
+  }
 }
 
 void SnakeApp::ResetGame() {
@@ -360,6 +367,7 @@ void SnakeApp::ResetGame() {
   state_ = GameState::kPlaying;
   time_left_ = 0;
   top_players_.clear();
+  your_top_scores_.clear();
 }
 
 }  // namespace snakeapp
